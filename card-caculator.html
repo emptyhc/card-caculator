@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡组抽卡概率计算器 - 简化版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            color: #a0a0c0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            display: flex;
+            align-items: center;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .input-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #b0b0d0;
+        }
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 5px 15px;
+            border: 2px solid rgba(76, 201, 240, 0.3);
+        }
+        .input-with-unit:focus-within {
+            border-color: #4cc9f0;
+        }
+        input[type="number"] {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            padding: 12px 0;
+            width: 100%;
+            outline: none;
+        }
+        .unit {
+            color: #a0a0c0;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        button {
+            background: linear-gradient(90deg, #4361ee, #3a0ca3);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: block;
+            margin: 25px auto;
+            width: 200px;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #3a0ca3, #4361ee);
+            transform: translateY(-2px);
+        }
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .result-card {
+            text-align: center;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(76, 201, 240, 0.1);
+        }
+        .result-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin: 15px 0;
+            color: #4cc9f0;
+        }
+        .result-label {
+            font-size: 1.1rem;
+            color: #a0a0c0;
+        }
+        .result-percentage {
+            font-size: 1.3rem;
+            color: #f72585;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        .probability-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        .probability-table th {
+            background: rgba(67, 97, 238, 0.2);
+            padding: 15px;
+            text-align: center;
+            color: #b0b0d0;
+        }
+        .probability-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .probability-table tr:hover {
+            background: rgba(76, 201, 240, 0.1);
+        }
+        .highlight {
+            background: rgba(247, 37, 133, 0.1) !important;
+            color: #f72585;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0a0c0;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .input-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .result-value {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>卡组抽卡概率计算器</h1>
+            <p class="subtitle">计算从39张卡组中抽取至少指定数量A牌的概率 | 简化版</p>
+        </header>
+        
+        <div class="card">
+            <div class="card-title">卡组配置</div>
+            <div class="input-group">
+                <div class="input-container">
+                    <label for="aCount">A牌数量</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="aCount" min="0" max="39" value="5">
+                        <div class="unit">张 (0-39)</div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <label for="drawCount">抽取张数</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="drawCount" min="1" max="39" value="7">
+                        <div class="unit">张 (1-39)</div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <label for="minA">至少抽到A牌数量</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="minA" min="1" max="39" value="1">
+                        <div class="unit">张 (最小1)</div>
+                    </div>
+                </div>
+            </div>
+            <button id="calculateBtn">计算概率</button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">计算结果</div>
+            <div class="results-container">
+                <div class="result-card">
+                    <div class="result-label">至少抽到 <span id="minALabel">1</span> 张A的概率</div>
+                    <div class="result-value" id="probabilityValue">0.0000</div>
+                    <div class="result-percentage" id="probabilityPercentage">0.00%</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">期望抽到的A牌数量</div>
+                    <div class="result-value" id="expectedValue">0.0000</div>
+                    <div class="result-percentage">张</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">抽不到A牌的概率</div>
+                    <div class="result-value" id="noAProbability">0.0000</div>
+                    <div class="result-percentage" id="noAPercentage">0.00%</div>
+                </div>
+            </div>
+            <table class="probability-table">
+                <thead>
+                    <tr>
+                        <th>抽到A牌数量</th>
+                        <th>精确概率</th>
+                        <th>累积概率 (至少)</th>
+                        <th>累积概率 (至多)</th>
+                    </tr>
+                </thead>
+                <tbody id="probabilityTableBody">
+                    <!-- 表格内容将通过JavaScript动态生成 -->
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">
+            <p>卡组总数固定为39张 | ©emptyhc | 基于组合数学计算</p>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const aCountInput = document.getElementById('aCount');
+        const drawCountInput = document.getElementById('drawCount');
+        const minAInput = document.getElementById('minA');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const probabilityValue = document.getElementById('probabilityValue');
+        const probabilityPercentage = document.getElementById('probabilityPercentage');
+        const expectedValue = document.getElementById('expectedValue');
+        const noAProbability = document.getElementById('noAProbability');
+        const noAPercentage = document.getElementById('noAPercentage');
+        const probabilityTableBody = document.getElementById('probabilityTableBody');
+        const minALabel = document.getElementById('minALabel');
+        
+        // 组合数计算函数（使用BigInt避免大数问题）
+        function combination(n, k) {
+            if (k < 0 || k > n) return 0n;
+            if (k === 0 || k === n) return 1n;
+            k = Math.min(k, n - k);
+            let result = 1n;
+            for (let i = 1n; i <= BigInt(k); i++) {
+                result = result * (BigInt(n) - BigInt(k) + i) / i;
+            }
+            return result;
+        }
+        
+        // 更新显示
+        function syncInputs() {
+            const aCount = parseInt(aCountInput.value);
+            const drawCount = parseInt(drawCountInput.value);
+            const maxMinA = Math.min(aCount, drawCount, 39);
+            
+            if (parseInt(minAInput.value) > maxMinA) {
+                minAInput.value = maxMinA;
+            }
+            minAInput.max = maxMinA;
+            minALabel.textContent = minAInput.value;
+        }
+        
+        // 计算概率
+        function calculateProbability() {
+            const totalCards = 39;
+            const aCount = parseInt(aCountInput.value);
+            const drawCount = parseInt(drawCountInput.value);
+            const minA = parseInt(minAInput.value);
+            
+            // 验证输入
+            if (isNaN(aCount) || aCount < 0 || aCount > 39) {
+                alert("请输入有效的A牌数量 (0-39)");
+                return;
+            }
+            if (isNaN(drawCount) || drawCount < 1 || drawCount > 39) {
+                alert("请输入有效的抽取张数 (1-39)");
+                return;
+            }
+            if (isNaN(minA) || minA < 1 || minA > Math.min(aCount, drawCount)) {
+                alert(`至少抽到的A牌数量必须介于1和${Math.min(aCount, drawCount)}之间`);
+                return;
+            }
+            
+            // 非A牌数量
+            const nonACards = totalCards - aCount;
+            
+            // 计算精确概率分布
+            const exactProbabilities = [];
+            for (let k = 0; k <= Math.min(aCount, drawCount); k++) {
+                if (drawCount - k > nonACards) {
+                    exactProbabilities[k] = 0;
+                    continue;
+                }
+                const ways = Number(combination(aCount, k) * combination(nonACards, drawCount - k));
+                const totalWays = Number(combination(totalCards, drawCount));
+                exactProbabilities[k] = ways / totalWays;
+            }
+            
+            // 计算累积概率（至少k张A）
+            const cumulativeAtLeast = [];
+            for (let k = 0; k < exactProbabilities.length; k++) {
+                cumulativeAtLeast[k] = exactProbabilities.slice(k).reduce((sum, p) => sum + p, 0);
+            }
+            
+            // 计算累积概率（至多k张A）
+            const cumulativeAtMost = [];
+            for (let k = 0; k < exactProbabilities.length; k++) {
+                cumulativeAtMost[k] = exactProbabilities.slice(0, k + 1).reduce((sum, p) => sum + p, 0);
+            }
+            
+            // 更新显示结果
+            const atLeastMinA = cumulativeAtLeast[minA] || 0;
+            probabilityValue.textContent = atLeastMinA.toFixed(4);
+            probabilityPercentage.textContent = (atLeastMinA * 100).toFixed(2) + "%";
+            
+            // 计算期望值
+            const expected = drawCount * (aCount / totalCards);
+            expectedValue.textContent = expected.toFixed(4);
+            
+            // 计算没有A的概率
+            const noA = exactProbabilities[0];
+            noAProbability.textContent = noA.toFixed(4);
+            noAPercentage.textContent = (noA * 100).toFixed(2) + "%";
+            
+            // 更新概率表格
+            updateProbabilityTable(exactProbabilities, cumulativeAtLeast, cumulativeAtMost, minA);
+        }
+        
+        // 更新概率表格
+        function updateProbabilityTable(exactProbabilities, cumulativeAtLeast, cumulativeAtMost, minA) {
+            let tableHTML = "";
+            for (let k = 0; k < exactProbabilities.length; k++) {
+                const isHighlight = k >= minA;
+                const rowClass = isHighlight ? "highlight" : "";
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td>${k} 张</td>
+                        <td>${(exactProbabilities[k] * 100).toFixed(2)}%</td>
+                        <td>${(cumulativeAtLeast[k] * 100).toFixed(2)}%</td>
+                        <td>${(cumulativeAtMost[k] * 100).toFixed(2)}%</td>
+                    </tr>
+                `;
+            }
+            probabilityTableBody.innerHTML = tableHTML;
+        }
+        
+        // 事件监听
+        aCountInput.addEventListener('input', syncInputs);
+        drawCountInput.addEventListener('input', syncInputs);
+        minAInput.addEventListener('input', syncInputs);
+        calculateBtn.addEventListener('click', calculateProbability);
+        
+        // 页面加载时初始化
+        window.addEventListener('load', function() {
+            syncInputs();
+            calculateProbability();
+        });
+    </script>
+</body>
+</html>
